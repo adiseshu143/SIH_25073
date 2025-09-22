@@ -1,0 +1,15 @@
+/* Global theme overrides (CDN Tailwind used) */
+:root {
+  --color-primary: #4CAF50;
+  --color-secondary: #FFC107;
+  --color-cream: #FFFBEA;
+}
+
+html, body, #root {
+  height: 100%;
+}
+
+body {
+  margin: 0;
+  background: var(--color-cream);
+}
