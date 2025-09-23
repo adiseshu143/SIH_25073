@@ -1,12 +1,12 @@
 import React from 'react';
 import { NavLink } from 'react-router-dom';
-import { FaLeaf } from 'react-icons/fa';
+import AnimatedFarmingLogo from './AnimatedLogo';
 
 const Navbar = ({ isAuthenticated, onShowAuth, onLogout }) => (
   <nav className="sticky top-0 z-50 bg-white/80 backdrop-blur border-b border-gray-100">
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3 flex items-center justify-between">
       <NavLink to="/" className="flex items-center gap-2 font-semibold text-primary">
-        <FaLeaf className="text-primary" />
+  <AnimatedFarmingLogo size={40} />
         <span>PixelFarmers</span>
       </NavLink>
       <div className="hidden md:flex items-center gap-6 text-sm">

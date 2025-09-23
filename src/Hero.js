@@ -41,7 +41,11 @@ const Hero = () => {
           </div>
         </motion.div>
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.7, delay: 0.1 }}>
-          <TractorAnimation />
+          <img
+            src="/tractor1.png"
+            alt="Tractor"
+            className="w-full max-w-xs mx-auto rounded-2xl"
+          />
         </motion.div>
       </div>
     </section>

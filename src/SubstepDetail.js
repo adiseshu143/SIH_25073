@@ -1,6 +1,7 @@
 import React from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { TASKS } from './TaskDetail';
+import { useProgress } from './ProgressContext';
 // Substep descriptions (copy from TaskDetail.js)
 const SUBSTEP_DESCRIPTIONS = {
   'Collect samples': `Collecting soil samples is the first and most crucial step in soil testing.
@@ -37,35 +38,42 @@ const SUBSTEP_LINKS = {
 };
 
 export default function SubstepDetail() {
+  // Remove scrollTo logic; rely on flexbox centering for visibility
   const { id, stepIdx, subIdx } = useParams();
   const navigate = useNavigate();
+  const { progress, markSubstepComplete } = useProgress();
   const task = TASKS.find(t => t.id === Number(id));
+  const totalSteps = task?.steps.length;
+  const totalSubsteps = task?.steps.map(s => s.substeps.length);
   if (!task) return <div>Task not found</div>;
   const step = task.steps[stepIdx];
   if (!step) return <div>Step not found</div>;
   const substep = step.substeps[subIdx];
   if (!substep) return <div>Substep not found</div>;
+  const isSubCompleted = progress?.[task.id]?.substeps?.[stepIdx]?.[subIdx] || false;
 
   // You can import SUBSTEP_DESCRIPTIONS and SUBSTEP_LINKS from TaskDetail.js if exported
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center p-8">
-      <button onClick={() => navigate(-1)} className="mb-4 text-primary hover:underline font-semibold flex items-center gap-1">
-        <span className="text-xl">←</span> Back
-      </button>
-      <div className="max-w-xl w-full bg-white rounded-2xl shadow-soft p-8 border border-gray-100">
+    <div className="min-h-screen w-full flex items-center justify-center p-8" style={{ position: 'relative' }}>
+      <div style={{ position: 'fixed', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', zIndex: 10 }} className="max-w-xl w-full bg-white rounded-2xl shadow-soft p-8 border border-gray-100 flex flex-col items-center justify-center">
+        <button onClick={() => navigate(-1)} className="mb-4 text-primary hover:underline font-semibold flex items-center gap-1">
+          <span className="text-xl">←</span> Back
+        </button>
         <h2 className="text-2xl font-bold text-primary mb-2">{substep}</h2>
         {/* Description */}
         <div className="mb-4">
           <span className="font-semibold">Description:</span>
           <div className="mt-1 whitespace-pre-line">{SUBSTEP_DESCRIPTIONS[substep] || 'No description available.'}</div>
         </div>
-        {/* Progress (always 0% for demo, you can add logic) */}
+        {/* Mark as Complete button */}
         <div className="mb-4">
-          <span className="font-semibold">Progress:</span>
-          <div className="w-full bg-gray-100 rounded-full h-3 mt-1">
-            <div className="bg-primary h-3 rounded-full" style={{ width: `0%` }} />
-          </div>
-          <span className="text-xs text-gray-500 ml-2">0%</span>
+          <button
+            className="px-4 py-2 bg-green-600 text-white rounded-xl font-bold shadow hover:bg-green-700 transition"
+            onClick={() => markSubstepComplete(task.id, Number(stepIdx), Number(subIdx), totalSteps, totalSubsteps)}
+            disabled={isSubCompleted}
+          >
+            {isSubCompleted ? 'Completed!' : 'Mark as Complete'}
+          </button>
         </div>
         {/* Website link */}
         <div className="mb-2">

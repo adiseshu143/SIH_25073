@@ -1,14 +1,14 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 
-const AnimatedFarmingLogo = () => (
+const AnimatedFarmingLogo = ({ size = 40 }) => (
   <motion.div
     initial={{ scale: 0.7, opacity: 0, rotate: -10 }}
     animate={{ scale: 1, opacity: 1, rotate: 0 }}
     transition={{ duration: 1, type: 'spring' }}
-    className="flex flex-col items-center justify-center py-8"
+    className="flex flex-col items-center justify-center py-2"
   >
-    <svg width="120" height="120" viewBox="0 0 120 120" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <svg width={size} height={size} viewBox="0 0 120 120" fill="none" xmlns="http://www.w3.org/2000/svg">
       {/* Sun */}
       <motion.circle cx="90" cy="30" r="16" fill="#FFD700" initial={{ scale: 0 }} animate={{ scale: 1 }} transition={{ delay: 0.5, duration: 0.8 }} />
       {/* Field */}
@@ -24,8 +24,6 @@ const AnimatedFarmingLogo = () => (
         <circle cx="70" cy="82" r="4" fill="#333" />
       </motion.g>
     </svg>
-    <div className="mt-4 text-2xl font-bold text-primary">FarmQuest</div>
-    <div className="text-green-700 font-medium">Gamified Farming Platform</div>
   </motion.div>
 );
 

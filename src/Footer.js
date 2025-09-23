@@ -1,19 +1,19 @@
 import React from 'react';
-import { FaLeaf } from 'react-icons/fa';
+import AnimatedFarmingLogo from './AnimatedLogo';
 
 const Footer = () => (
   <footer className="mt-auto bg-white border-t border-gray-100">
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 grid gap-6 md:grid-cols-3">
       <div>
         <div className="flex items-center gap-2 font-semibold text-primary">
-          <FaLeaf />
-          <span>GreenQuest</span>
+          <AnimatedFarmingLogo size={40} />
+          <span>PixelFarmers</span>
         </div>
         <p className="text-sm text-gray-600 mt-2">Sustainable farming made engaging and rewarding.</p>
       </div>
       <div>
         <h4 className="font-semibold mb-2">Contact</h4>
-        <p className="text-sm text-gray-600">support@greenquest.io</p>
+  <p className="text-sm text-gray-600">support@pixelfarmers.io</p>
       </div>
       <div>
         <h4 className="font-semibold mb-2">Follow</h4>

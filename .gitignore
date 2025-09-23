@@ -21,3 +21,4 @@
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
+\n# Ignore large media\npublic/*.mp4\npublic/*.MP4\npublic/*.mov\npublic/*.webm\npublic/*.avi\npublic/*.mkv\n

@@ -21,7 +21,7 @@ const CircularGauge = ({ value = 72 }) => (
 const Dashboard = () => (
   <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
     <ProfileSection />
-    <AnimatedLogo />
+    <AnimatedLogo size={40} />
     <h2 className="text-3xl font-bold mt-6">Your Progress</h2>
     <div className="mt-8 grid lg:grid-cols-3 gap-8">
       <div className="p-6 bg-white rounded-xl shadow-soft border">

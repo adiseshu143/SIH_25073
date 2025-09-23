@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
+import AnimatedFarmingLogo from './AnimatedLogo';
 
 const AuthForm = ({ isLogin, onToggle, onSubmit, onGoogle, error }) => {
   const [formData, setFormData] = useState({ name: '', email: '', password: '' });
@@ -13,6 +14,11 @@ const AuthForm = ({ isLogin, onToggle, onSubmit, onGoogle, error }) => {
       className="min-h-[70vh] flex items-center justify-center"
     >
       <div className="max-w-md w-full space-y-6 bg-white p-8 rounded-2xl shadow-soft border border-gray-100">
+        <div className="flex flex-col items-center justify-center mb-2">
+          <div className="mb-2">
+            <AnimatedFarmingLogo size={100} />
+          </div>
+        </div>
         <div className="text-center">
           <h2 className="text-2xl font-bold">{isLogin ? 'Sign In' : 'Create Account'}</h2>
           <p className="text-gray-600 text-sm">Access your sustainable journey</p>

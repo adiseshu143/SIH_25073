@@ -1,7 +1,5 @@
 import React from "react";
 
-// Use your own tractor image path or URL
-const TRACTOR_IMG = "/tractor.png"; // Place tractor.png in public folder
 
 const TractorAnimation = () => (
   <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 flex flex-col items-center">

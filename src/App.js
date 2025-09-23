@@ -1,24 +1,21 @@
 // Styles are provided via Tailwind CDN in public/index.html
 import { useEffect, useState } from 'react';
-import { Routes, Route, NavLink, useLocation, useNavigate, Navigate } from 'react-router-dom';
-import { motion, AnimatePresence } from 'framer-motion';
-import { FaLeaf } from 'react-icons/fa';
-import TractorAnimation from './TractorAnimation';
+import { Routes, Route, useLocation, useNavigate, Navigate } from 'react-router-dom';
+import { AnimatePresence } from 'framer-motion';
 import AnimatedFarmingLogo from './AnimatedLogo';
+import DashboardLeaderboard from './DashboardLeaderboard';
+import { ProgressProvider } from './ProgressContext';
 import { auth, googleProvider } from './firebase';
 import Container from './Container';
 import Navbar from './Navbar';
 import Hero from './Hero';
 import Features from './Features';
-import DashboardLeaderboard from './DashboardLeaderboard';
 import About from './About';
 import Community from './Community';
 import AuthForm from './AuthForm';
 import Footer from './Footer';
-import SoilTestingVisual from './SoilTestingVisual';
-import PlowingVisual from './PlowingVisual';
-import ProgressBar from './ProgressBar';
 import ProfileSection from './ProfileSection';
+import ProfilePage from './ProfilePage';
 import TaskDetail from './TaskDetail';
 import SubstepDetail from './SubstepDetail';
 import {
@@ -36,13 +33,18 @@ import {
 
 // Play page with sidebar and expanding tasks
 function PlayPage() {
+  const [selectedId, setSelectedId] = useState(1);
+  function handleCompleteCurrentTask() {
+    if (!completedTaskIds.includes(tasks[currentTaskIdx].id)) {
+      setCompletedTaskIds([...completedTaskIds, tasks[currentTaskIdx].id]);
+    }
+  }
+  // Removed unused selectedId
+  const [completedTaskIds, setCompletedTaskIds] = useState([]);
+  // ...existing code...
   const navigate = useNavigate();
   // Example state and logic for PlayPage
-  const [selectedId, setSelectedId] = useState(1);
-  const [activeSubstep, setActiveSubstep] = useState({});
-  const [substepProgress, setSubstepProgress] = useState({});
-  const [completedSubsteps, setCompletedSubsteps] = useState({});
-  const [openSteps, setOpenSteps] = useState({});
+  // ...existing code...
   const tasks = [
     {
       id: 1,
@@ -145,29 +147,21 @@ function PlayPage() {
       visual: <div className="text-gray-700">Ensure quality and reduce losses after harvest.</div>
     }
   ];
-  const selected = tasks.find(t => t.id === selectedId);
+  
 
-  function getSubstepPreview(substep) {
-    switch (substep) {
-      case 'Collect samples':
-        return 'Collecting soil samples from different locations...';
-      case 'Test pH':
-        return 'Testing soil pH using a kit...';
-      case 'Assess nutrients':
-        return 'Analyzing nutrient content in the lab...';
-      case 'Record moisture':
-        return 'Measuring and recording soil moisture...';
-      case 'Remove weeds':
-        return 'Removing weeds from the field...';
-      case 'Pick stones':
-        return 'Picking stones and debris from the soil...';
-      case 'Dispose debris':
-        return 'Disposing of unwanted debris...';
-      // Add more cases for other substeps as needed
-      default:
-        return `Processing: ${substep}`;
+  // ...existing code...
+
+  // Determine current task index
+  const currentTaskIdx = completedTaskIds.length;
+
+  function handleTaskClick(task, idx) {
+    if (idx === currentTaskIdx) {
+      setSelectedId(task.id);
+      navigate(`/task/${task.id}`);
     }
   }
+
+  // Removed unused handleCompleteCurrentTask
 
   return (
     <section id="play-section" className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
@@ -176,18 +170,33 @@ function PlayPage() {
         <p className="text-lg text-gray-700">Complete each step to progress and earn rewards!</p>
       </div>
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        {tasks.map(task => (
-          <div key={task.id} className={`rounded-xl shadow-soft border border-gray-100 bg-white transition hover:shadow-lg cursor-pointer ${selectedId === task.id ? 'ring-2 ring-primary' : ''}`}
-            onClick={() => navigate(`/task/${task.id}`)}
-          >
+        {tasks.map((task, idx) => {
+          const isCompleted = completedTaskIds.includes(task.id);
+          const isCurrent = idx === currentTaskIdx;
+          const isLocked = idx > currentTaskIdx;
+          return (
             <div
-              className={`w-full text-left px-5 py-4 font-bold text-lg ${selectedId === task.id ? 'bg-primary/10 text-primary' : 'hover:bg-gray-50 text-gray-800'} rounded-t-xl transition`}
+              key={task.id}
+              className={`rounded-xl shadow-soft border border-gray-100 bg-white transition ${isCurrent ? 'hover:shadow-lg cursor-pointer ring-2 ring-primary' : ''} ${isLocked ? 'opacity-50 cursor-not-allowed' : ''}`}
+              onClick={() => handleTaskClick(task, idx)}
             >
-              <span className="inline-block mr-2 align-middle">🌱</span>{task.title}
+              <div
+                className={`w-full text-left px-5 py-4 font-bold text-lg rounded-t-xl transition flex items-center gap-2 ${isCurrent ? 'bg-primary/10 text-primary' : 'hover:bg-gray-50 text-gray-800'}`}
+              >
+                {isCompleted ? (
+                  <span className="inline-block text-green-600">✔️</span>
+                ) : isLocked ? (
+                  <span className="inline-block text-gray-400">🔒</span>
+                ) : (
+                  <span className="inline-block mr-2 align-middle">🌱</span>
+                )}
+                {task.title}
+              </div>
             </div>
-          </div>
-        ))}
+          );
+        })}
       </div>
+  {/* ...existing code... */}
     </section>
   );
 }
@@ -199,14 +208,14 @@ function App() {
   const navigate = useNavigate();
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [isAuthReady, setIsAuthReady] = useState(false);
-  const [currentUser, setCurrentUser] = useState(null);
+  //const [currentUser, setCurrentUser] = useState(null);
   const [isLogin, setIsLogin] = useState(true);
   const [authError, setAuthError] = useState('');
 
   useEffect(() => {
     const unsub = onAuthStateChanged(auth, (user) => {
       setIsAuthenticated(!!user);
-      setCurrentUser(user);
+      // setCurrentUser(user); // removed unused
       if (user && location.pathname === '/auth') {
         navigate('/main', { replace: true });
       }
@@ -270,31 +279,35 @@ function App() {
   }, [showLogo, isAuthenticated, navigate]);
 
   return (
-    <AnimatePresence mode="wait">
-      {showLogo ? (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-white">
-          <AnimatedFarmingLogo />
-        </div>
-      ) : (
-        <Container>
-          <Navbar isAuthenticated={isAuthenticated} onShowAuth={handleShowAuth} onLogout={handleLogout} />
-          {location.pathname !== '/auth' && <Hero />}
-          <Routes>
-            <Route path="/" element={<Features />} />
-            <Route path="/features" element={<Features />} />
-            <Route path="/play" element={<PlayPage />} />
-            <Route path="/task/:id" element={<TaskDetail />} />
-            <Route path="/task/:id/step/:stepIdx/substep/:subIdx" element={<SubstepDetail />} />
-            <Route path="/dashboard-leaderboard" element={<RequireAuth><DashboardLeaderboard /></RequireAuth>} />
-            <Route path="/community" element={<RequireAuth><Community /></RequireAuth>} />
-            <Route path="/about" element={<About />} />
-            <Route path="/profile" element={<RequireAuth><ProfileSection /></RequireAuth>} />
-            <Route path="/auth" element={<AuthForm isLogin={isLogin} onToggle={handleAuthToggle} onSubmit={handleAuthSubmit} onGoogle={handleGoogleSignIn} error={authError} />} />
-          </Routes>
-          {location.pathname !== '/auth' && <Footer />}
-        </Container>
-      )}
-    </AnimatePresence>
+    <ProgressProvider>
+      <AnimatePresence mode="wait">
+        {showLogo ? (
+          <div className="fixed inset-0 z-50 flex flex-col items-center justify-center bg-white">
+            <AnimatedFarmingLogo size={180} />
+            <h1 className="mt-6 text-4xl font-extrabold text-green-700 tracking-wide drop-shadow-lg">PixelFarmers</h1>
+          </div>
+        ) : (
+          <Container>
+            <Navbar isAuthenticated={isAuthenticated} onShowAuth={handleShowAuth} onLogout={handleLogout} />
+            {location.pathname !== '/auth' && <Hero />}
+            <Routes>
+              <Route path="/" element={<Features />} />
+              <Route path="/features" element={<Features />} />
+              <Route path="/play" element={<PlayPage />} />
+              <Route path="/task/:id" element={<TaskDetail />} />
+              <Route path="/task/:id/step/:stepIdx/substep/:subIdx" element={<SubstepDetail />} />
+              <Route path="/profile" element={<ProfilePage />} />
+              <Route path="/community" element={<RequireAuth><Community /></RequireAuth>} />
+              <Route path="/about" element={<About />} />
+              <Route path="/profile" element={<RequireAuth><ProfileSection /></RequireAuth>} />
+              <Route path="/dashboard-leaderboard" element={<DashboardLeaderboard />} />
+              <Route path="/auth" element={<AuthForm isLogin={isLogin} onToggle={handleAuthToggle} onSubmit={handleAuthSubmit} onGoogle={handleGoogleSignIn} error={authError} />} />
+            </Routes>
+            {location.pathname !== '/auth' && <Footer />}
+          </Container>
+        )}
+      </AnimatePresence>
+    </ProgressProvider>
   );
 }
 
