@@ -1,6 +1,10 @@
 import React, { useState } from 'react';
 import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { useProgress } from './ProgressContext';
+import QuestPath from './components/GameUI/QuestPath';
+import SubstepVisuals from './components/GameUI/SubstepVisuals';
+import Confetti from './components/GameUI/Confetti';
+import BadgePopup from './components/GameUI/BadgePopup';
 // Map step names to video filenames
 const LAND_PREP_VIDEO_MAP = {
   'Soil Testing and Analysis': '/1.soil testing.mp4',
@@ -144,56 +148,60 @@ export const TASKS = [
 
 
 export default function TaskDetail() {
-  // ...existing code...
   const { progress } = useProgress();
-  // Use React Router location and state to restore activeStepIdx
   const location = useLocation();
+  const { id } = useParams();
+  const navigate = useNavigate();
+  // Gamification state (must be before any return)
+  const [showBadge, setShowBadge] = useState(null);
+  const [showQuestComplete, setShowQuestComplete] = useState(false);
+  const [xp, setXp] = useState(0);
+  const [level, setLevel] = useState(1);
+  // Step state
   let initialStepIdx = 0;
   if (location.state && typeof location.state.activeStepIdx === 'number') {
     initialStepIdx = location.state.activeStepIdx;
   }
   const [activeStepIdx, setActiveStepIdx] = useState(initialStepIdx);
-  const { id } = useParams();
   const task = TASKS.find(t => t.id === Number(id));
   const [completedSubstepsArr, setCompletedSubstepsArr] = useState(() => task?.steps.map(() => []) || []);
-  const navigate = useNavigate();
-  // Substep descriptions
-    const SUBSTEP_DESCRIPTIONS = {
-      'Collect samples': `Collecting soil samples is the first and most crucial step in soil testing.
-  Take samples from multiple locations in the field for accurate results.
-  Proper sampling helps determine nutrient needs and improve crop yield.`,
-      'Test pH': 'Use a soil pH kit to determine the acidity or alkalinity of the soil, which affects nutrient availability.',
-      'Assess nutrients': 'Analyze the soil for essential nutrients like nitrogen, phosphorus, and potassium.',
-      'Record moisture': 'Measure and record the moisture content to plan irrigation and crop selection.',
-      'Remove weeds': 'Clear weeds to prevent competition for nutrients and water.',
-  'Pick stones': 'Remove stones and debris to prepare a smooth seedbed.',
-  'Dispose debris': 'Safely dispose of organic and inorganic debris to maintain field hygiene.',
-      'Check water source': 'Inspect the water source for quality and availability before irrigation.',
-      'Irrigate lightly': 'Apply a small amount of water to settle the soil before sowing.',
-      'Choose plow': 'Select the appropriate plow based on soil type and crop requirements.',
-      'Set depth': 'Adjust the plow to the correct depth for effective tillage.',
-      'Plow field': 'Turn and aerate the soil to improve structure and root penetration.',
-      'Break clods': 'Use harrows to break up large soil clods for a finer seedbed.',
-    };
 
-    const SUBSTEP_LINKS = {
-      'Level surface': { website: 'https://www.gardeningknowhow.com/garden-how-to/soil-fertilizers/soil-leveling-tips.htm' },
-      'Survey field': { website: 'https://www.agriculture.com/crops/soil-health/land-surveying-basics' },
-      'Fill low spots': { website: 'https://www.gardeningknowhow.com/garden-how-to/soil-fertilizers/filling-low-spots-in-lawn.htm' },
-      'Ensure slope': { website: 'https://www.agriculture.com/crops/soil-health/field-drainage-tips' },
-      'Calculate rate': { website: 'https://www.agriculture.com/crops/soil-health/fertilizer-rate-calculator' },
-      'Apply evenly': { website: 'https://www.gardeningknowhow.com/garden-how-to/soil-fertilizers/applying-fertilizer-evenly.htm' },
-      'Incorporate': { website: 'https://www.agriculture.com/crops/soil-health/incorporating-fertilizer-into-soil.htm' },
-      'Mark rows': { website: 'https://www.gardeningknowhow.com/edible/vegetables/vgen/row-planting-vegetables.htm' },
-      'Prepare beds/holes': { website: 'https://www.gardeningknowhow.com/garden-how-to/projects/preparing-garden-beds.htm' },
-      'Plan channels': { website: 'https://www.agriculture.com/crops/soil-health/irrigation-channel-design.htm' },
-      'Install pipes': { website: 'https://www.agriculture.com/machinery/irrigation/pipe-installation-tips' },
-      'Test flow': { website: 'https://www.agriculture.com/machinery/irrigation/water-flow-testing.htm' },
-      'Walk-through': { website: 'https://www.agriculture.com/crops/soil-health/field-inspection-checklist' },
-      'Verify readiness': { website: 'https://www.agriculture.com/crops/soil-health/field-readiness-tips' },
-      'Choose crop variety': { website: 'https://www.gardeningknowhow.com/edible/vegetables/vgen/choosing-varieties.htm' },
-      'Check seed quality': { website: 'https://www.gardeningknowhow.com/edible/vegetables/vgen/seed-quality.htm' },
-      'Purchase certified seeds': { website: 'https://www.gardeningknowhow.com/edible/vegetables/vgen/certified-seeds.htm' },
+  // Substep descriptions
+  const SUBSTEP_DESCRIPTIONS = {
+    'Collect samples': `Collecting soil samples is the first and most crucial step in soil testing.
+Take samples from multiple locations in the field for accurate results.
+Proper sampling helps determine nutrient needs and improve crop yield.`,
+    'Test pH': 'Use a soil pH kit to determine the acidity or alkalinity of the soil, which affects nutrient availability.',
+    'Assess nutrients': 'Analyze the soil for essential nutrients like nitrogen, phosphorus, and potassium.',
+    'Record moisture': 'Measure and record the moisture content to plan irrigation and crop selection.',
+    'Remove weeds': 'Clear weeds to prevent competition for nutrients and water.',
+    'Pick stones': 'Remove stones and debris to prepare a smooth seedbed.',
+    'Dispose debris': 'Safely dispose of organic and inorganic debris to maintain field hygiene.',
+    'Check water source': 'Inspect the water source for quality and availability before irrigation.',
+    'Irrigate lightly': 'Apply a small amount of water to settle the soil before sowing.',
+    'Choose plow': 'Select the appropriate plow based on soil type and crop requirements.',
+    'Set depth': 'Adjust the plow to the correct depth for effective tillage.',
+    'Plow field': 'Turn and aerate the soil to improve structure and root penetration.',
+    'Break clods': 'Use harrows to break up large soil clods for a finer seedbed.',
+  };
+  const SUBSTEP_LINKS = {
+    'Level surface': { website: 'https://www.gardeningknowhow.com/garden-how-to/soil-fertilizers/soil-leveling-tips.htm' },
+    'Survey field': { website: 'https://www.agriculture.com/crops/soil-health/land-surveying-basics' },
+    'Fill low spots': { website: 'https://www.gardeningknowhow.com/garden-how-to/soil-fertilizers/filling-low-spots-in-lawn.htm' },
+    'Ensure slope': { website: 'https://www.agriculture.com/crops/soil-health/field-drainage-tips' },
+    'Calculate rate': { website: 'https://www.agriculture.com/crops/soil-health/fertilizer-rate-calculator' },
+    'Apply evenly': { website: 'https://www.gardeningknowhow.com/garden-how-to/soil-fertilizers/applying-fertilizer-evenly.htm' },
+    'Incorporate': { website: 'https://www.agriculture.com/crops/soil-health/incorporating-fertilizer-into-soil.htm' },
+    'Mark rows': { website: 'https://www.gardeningknowhow.com/edible/vegetables/vgen/row-planting-vegetables.htm' },
+    'Prepare beds/holes': { website: 'https://www.gardeningknowhow.com/garden-how-to/projects/preparing-garden-beds.htm' },
+    'Plan channels': { website: 'https://www.agriculture.com/crops/soil-health/irrigation-channel-design.htm' },
+    'Install pipes': { website: 'https://www.agriculture.com/machinery/irrigation/pipe-installation-tips' },
+    'Test flow': { website: 'https://www.agriculture.com/machinery/irrigation/water-flow-testing.htm' },
+    'Walk-through': { website: 'https://www.agriculture.com/crops/soil-health/field-inspection-checklist' },
+    'Verify readiness': { website: 'https://www.agriculture.com/crops/soil-health/field-readiness-tips' },
+    'Choose crop variety': { website: 'https://www.gardeningknowhow.com/edible/vegetables/vgen/choosing-varieties.htm' },
+    'Check seed quality': { website: 'https://www.gardeningknowhow.com/edible/vegetables/vgen/seed-quality.htm' },
+    'Purchase certified seeds': { website: 'https://www.gardeningknowhow.com/edible/vegetables/vgen/certified-seeds.htm' },
       'Store seeds properly': { website: 'https://www.gardeningknowhow.com/edible/vegetables/vgen/storing-seeds.htm' },
       'Prepare sowing equipment': { website: 'https://www.gardeningknowhow.com/garden-how-to/tools/seed-sowing-tools.htm' },
       'Sow seeds at proper depth': { website: 'https://www.gardeningknowhow.com/edible/vegetables/vgen/seed-depth.htm' },
@@ -250,126 +258,162 @@ export default function TaskDetail() {
     setCompletedSteps((prev) => prev.includes(stepIdx) ? prev : [...prev, stepIdx]);
   }
 
+
+const stepIcons = ['🧪','🧹','💧','🚜','🪓','📏','🧴','🛏️','💧','🔍'];
+
+// Award badge and XP on step/substep complete
+React.useEffect(() => {
+  if (task && progress?.[task.id]?.steps?.every(Boolean)) {
+    setShowQuestComplete(true);
+    setShowBadge('Quest Complete!');
+    setXp(100);
+    setLevel((l) => l + 1);
+  }
+}, [progress, task]);
+
 if (!task) {
   return <div className="min-h-screen flex items-center justify-center text-xl text-red-500">Task not found</div>;
 }
 
-// For Land Preparation, use flex row for steps and video, equally sized
-if (task.title === 'Land Preparation') {
-  return (
-    <div className="min-h-screen flex flex-col gap-8 p-8">
-      {/* Centered image, heading, description */}
-      <div className="flex flex-col items-center justify-center mb-8">
-        <img src="/landpreparation.jpg" alt="Land Preparation" className="w-32 h-32 rounded-2xl object-cover border border-green-300 mb-4 shadow" />
-        <h2 className="text-4xl font-bold text-primary mb-2">{task.title}</h2>
-        <div className="text-lg text-gray-700 text-center max-w-2xl">{task.description}</div>
+// Floating farm icons
+const floatingIcons = [
+  { icon: '🌾', style: { left: '10%', top: '20%', animationDelay: '0s' } },
+  { icon: '🚜', style: { left: '80%', top: '30%', animationDelay: '1s' } },
+  { icon: '🌻', style: { left: '20%', top: '70%', animationDelay: '2s' } },
+  { icon: '🥕', style: { left: '70%', top: '80%', animationDelay: '3s' } },
+  { icon: '🪴', style: { left: '50%', top: '10%', animationDelay: '1.5s' } },
+];
+
+return (
+  <div className="min-h-screen w-full relative bg-gradient-to-br from-green-100 via-yellow-50 to-blue-100 overflow-x-hidden">
+    {/* Floating farm icons */}
+    {floatingIcons.map((f, i) => (
+      <span key={i} className="fixed text-5xl pointer-events-none animate-floatIcon" style={{ ...f.style, position: 'fixed', zIndex: 1 }}>{f.icon}</span>
+    ))}
+    {/* Confetti for completion */}
+    {progress?.[task.id]?.steps?.every(Boolean) && <Confetti trigger={true} />}
+    {/* Badge popup */}
+    {showBadge && (
+      <BadgePopup badge={showBadge} onClose={() => setShowBadge(null)} />
+    )}
+    {/* Quest complete banner */}
+    {showQuestComplete && (
+      <div className="fixed top-20 left-1/2 -translate-x-1/2 z-50 bg-gradient-to-r from-yellow-200 via-green-100 to-blue-100 px-10 py-4 rounded-2xl shadow-2xl border-4 border-green-300 text-3xl font-extrabold text-green-800 animate-bounceIn flex items-center gap-4">
+        <span>🏆</span> Quest Complete!
       </div>
-      {/* Steps and video blocks side by side */}
-      <div className="flex flex-col md:flex-row gap-8 w-full">
-        {/* Steps block */}
-        <div className="flex-1 min-w-0 bg-white rounded-2xl shadow-soft p-8 border border-gray-100 flex flex-col">
-          <button onClick={() => navigate(-1)} className="mb-4 text-primary hover:underline font-semibold flex items-center gap-1">
-            <span className="text-xl">←</span> Back
-          </button>
-          {/* Task completion percentage */}
-          <div className="mb-4">
-            <span className="font-semibold">Task Progress:</span>
-            <div className="w-full bg-gray-100 rounded-full h-3 mt-1">
-              <div
-                className="bg-green-500 h-3 rounded-full"
-                style={{ width: `${progress?.[task.id]?.steps?.filter(Boolean).length / task.steps.length * 100 || 0}%` }}
-              />
-            </div>
-            <span className="text-xs text-gray-500 ml-2">
-              {Math.round(progress?.[task.id]?.steps?.filter(Boolean).length / task.steps.length * 100) || 0}%
-            </span>
+    )}
+    {/* Animated avatar */}
+    <div className="absolute left-8 top-8 z-10">
+      <img src="/logo192.png" alt="Avatar" className="w-20 h-20 rounded-full border-4 border-yellow-300 shadow-xl animate-avatarFloat" />
+      <div className="mt-2 text-center text-green-900 font-bold text-lg">Level {level}</div>
+    </div>
+    {/* Quest Path */}
+    <div className="pt-8">
+      <QuestPath steps={task.steps.map(s => s.step)} currentStep={activeStepIdx} onStepClick={setActiveStepIdx} />
+    </div>
+    {/* Main content */}
+    <div className="flex flex-col md:flex-row gap-8 w-full max-w-6xl mx-auto mt-4">
+      {/* Steps block */}
+      <div className="flex-1 min-w-0 bg-white/90 rounded-3xl shadow-2xl p-8 border-4 border-green-200 flex flex-col">
+        <button onClick={() => navigate(-1)} className="mb-4 text-primary hover:underline font-semibold flex items-center gap-1">
+          <span className="text-xl">←</span> Back
+        </button>
+        <div className="flex items-center gap-4 mb-4">
+          <img src={task.image} alt={task.title} className="w-16 h-16 rounded-xl border-2 border-green-300 shadow" />
+          <div>
+            <h2 className="text-3xl font-extrabold text-green-800 mb-1 drop-shadow">{task.title}</h2>
+            <div className="text-lg text-yellow-900 italic">{task.description}</div>
           </div>
-          <div className="flex-1 overflow-y-auto">
-            {task.steps.map((stepObj, stepIdx) => {
-              // Use progress context for substep completion
-              const completedSubsteps = progress?.[task.id]?.substeps?.[stepIdx] || [];
-              const isCompleted = progress?.[task.id]?.steps?.[stepIdx] || false;
-              const isCurrent = stepIdx === activeStepIdx;
-              const isLocked = stepIdx > (progress?.[task.id]?.steps?.findIndex(s => !s) ?? 0);
-              return (
-                <div key={stepObj.step} className="mb-6">
+        </div>
+        {/* XP/Level bar */}
+        <div className="mb-6">
+          <span className="font-semibold">XP Progress:</span>
+          <div className="w-full bg-gray-100 rounded-full h-4 mt-1 relative overflow-hidden">
+            <div
+              className="bg-yellow-400 h-4 rounded-full transition-all duration-700 animate-xpBar"
+              style={{ width: `${xp}%` }}
+            />
+            <span className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 text-xs font-bold text-green-900">{xp} XP</span>
+          </div>
+        </div>
+        {/* Step cards */}
+        <div className="flex flex-col gap-6">
+          {task.steps.map((stepObj, stepIdx) => {
+            const completedSubsteps = progress?.[task.id]?.substeps?.[stepIdx] || [];
+            const isCompleted = progress?.[task.id]?.steps?.[stepIdx] || false;
+            const isCurrent = stepIdx === activeStepIdx;
+            const isLocked = stepIdx > (progress?.[task.id]?.steps?.findIndex(s => !s) ?? 0);
+            return (
+              <div key={stepObj.step} className={`rounded-2xl p-4 shadow-lg border-2 flex flex-col gap-2 transition-all duration-300 ${isCurrent ? 'bg-yellow-100 border-yellow-300 scale-105 animate-bounceIn' : isCompleted ? 'bg-green-100 border-green-300 opacity-80' : 'bg-white border-gray-200'}`}>
+                <div className="flex items-center gap-3 mb-1">
+                  <span className="text-2xl">{stepIcons[stepIdx % stepIcons.length]}</span>
                   <button
-                    className={`font-bold text-lg text-green-700 mb-2 w-full text-left flex items-center gap-2 ${isCurrent ? 'bg-green-100' : ''} ${isLocked ? 'opacity-50 cursor-not-allowed' : ''}`}
+                    className={`font-bold text-lg text-green-800 flex-1 text-left ${isLocked ? 'opacity-50 cursor-not-allowed' : ''}`}
                     onClick={() => !isLocked && setActiveStepIdx(stepIdx)}
                     disabled={isLocked}
                   >
-                    {isCompleted ? <span className="text-green-600">✔️</span> : isLocked ? <span className="text-gray-400">🔒</span> : <span className="text-green-700">🌱</span>}
                     {stepObj.step}
                   </button>
-                  {/* Progress bar for substeps in this step (only show for current step) */}
-                  {isCurrent && (
-                    <div className="mb-2">
-                      <span className="font-semibold">Progress:</span>
-                      <div className="w-full bg-gray-100 rounded-full h-3 mt-1">
-                        <div
-                          className="bg-primary h-3 rounded-full"
-                          style={{ width: `${completedSubsteps.filter(Boolean).length / stepObj.substeps.length * 100 || 0}%` }}
-                        />
-                      </div>
-                      <span className="text-xs text-gray-500 ml-2">
-                        {completedSubsteps.filter(Boolean).length || 0} / {stepObj.substeps.length}
-                      </span>
-                    </div>
-                  )}
-                  {isCurrent && (
-                    <ul className="ml-4 mt-2">
-                      {task.steps[activeStepIdx].substeps.map((substep, subIdx) => {
-                        const isSubCompleted = completedSubsteps[subIdx] || false;
-                        // Only enable the next incomplete substep, but always enable the first substep of the first step
-                        const firstIncomplete = completedSubsteps.findIndex(s => !s);
-                        let isSubCurrent = subIdx === (firstIncomplete === -1 ? task.steps[activeStepIdx].substeps.length : firstIncomplete);
-                        let isSubLocked = !isSubCurrent && !isSubCompleted;
-                        if (activeStepIdx === 0 && subIdx === 0) {
-                          isSubLocked = false;
-                        }
-                        return (
-                          <li key={substep} className="mb-2 flex items-center gap-2">
-                            <button
-                              className={`text-primary hover:underline text-left font-semibold ${isSubLocked ? 'opacity-50 cursor-not-allowed' : ''}`}
-                              onClick={() => {
-                                if (!isSubLocked) {
-                                  handleSubstepClick(activeStepIdx, subIdx);
-                                }
-                              }}
-                              disabled={isSubLocked}
-                            >
-                              {isSubCompleted ? <span className="text-green-600">✔️</span> : isSubLocked ? <span className="text-gray-400">🔒</span> : <span className="text-green-700">🌱</span>}
-                              {substep}
-                            </button>
-                          </li>
-                        );
-                      })}
-                    </ul>
-                  )}
+                  {isCompleted ? <span className="text-green-600 text-xl">✔️</span> : isLocked ? <span className="text-gray-400 text-xl">🔒</span> : <span className="text-green-700 text-xl">🌱</span>}
                 </div>
-              );
-            })}
-          </div>
-        </div>
-        {/* Video block, equally sized and aligned */}
-        <div className="flex-1 min-w-0 flex items-center justify-center">
-          {activeStepIdx !== null && (
-            <div className="bg-gray-50 rounded-xl shadow border p-4 flex flex-col items-center w-full max-w-lg h-full">
-              <div className="font-bold text-base mb-2 text-green-800">{task.steps[activeStepIdx].step}</div>
-              <video
-                controls
-                className="w-full h-64 object-cover rounded-lg border"
-                src={getLandPrepVideoSrc(task.steps[activeStepIdx].step)}
-              >
-                Your browser does not support the video tag.
-              </video>
-            </div>
-          )}
+                {/* Substeps for current step */}
+                {isCurrent && (
+                  <ul className="flex flex-wrap gap-4 mt-2">
+                    {task.steps[activeStepIdx].substeps.map((substep, subIdx) => {
+                      const isSubCompleted = completedSubsteps[subIdx] || false;
+                      const firstIncomplete = completedSubsteps.findIndex(s => !s);
+                      let isSubCurrent = subIdx === (firstIncomplete === -1 ? task.steps[activeStepIdx].substeps.length : firstIncomplete);
+                      let isSubLocked = !isSubCurrent && !isSubCompleted;
+                      if (activeStepIdx === 0 && subIdx === 0) {
+                        isSubLocked = false;
+                      }
+                      return (
+                        <li key={substep} className={`flex flex-col items-center gap-1 px-4 py-2 rounded-xl border-2 shadow transition-all duration-200 ${isSubCompleted ? 'bg-green-100 border-green-300' : isSubCurrent ? 'bg-yellow-100 border-yellow-300 scale-105 animate-flipIn' : 'bg-white border-gray-200'}`}>
+                          <SubstepVisuals substep={substep} />
+                          <button
+                            className={`text-primary hover:underline text-center font-semibold ${isSubLocked ? 'opacity-50 cursor-not-allowed' : ''}`}
+                            onClick={() => {
+                              if (!isSubLocked) {
+                                // Always navigate to SubstepDetail for video/description/mark as complete
+                                navigate(`/task/${task.id}/step/${activeStepIdx}/substep/${subIdx}`, { state: { activeStepIdx } });
+                              }
+                            }}
+                            disabled={isSubLocked}
+                          >
+                            {isSubCompleted ? <span className="text-green-600">✔️</span> : isSubLocked ? <span className="text-gray-400">🔒</span> : <span className="text-green-700">🌱</span>}
+                            {substep}
+                          </button>
+                        </li>
+                      );
+                    })}
+                  </ul>
+                )}
+              </div>
+            );
+          })}
         </div>
       </div>
+      {/* Video block, equally sized and aligned */}
+      <div className="flex-1 min-w-0 flex items-center justify-center">
+        {activeStepIdx !== null && (
+          <div className="bg-white/80 rounded-3xl shadow-xl border-4 border-yellow-200 p-6 flex flex-col items-center w-full max-w-lg h-full">
+            <div className="font-bold text-xl mb-2 text-green-800 flex items-center gap-2">
+              <span>{stepIcons[activeStepIdx % stepIcons.length]}</span>
+              {task.steps[activeStepIdx].step}
+            </div>
+            <video
+              controls
+              className="w-full h-64 object-cover rounded-lg border"
+              src={getLandPrepVideoSrc(task.steps[activeStepIdx].step)}
+            >
+              Your browser does not support the video tag.
+            </video>
+          </div>
+        )}
+      </div>
     </div>
-  );
-}
+  </div>
+);
 
 // For other tasks, keep default layout
 return (

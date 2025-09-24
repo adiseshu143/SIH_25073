@@ -1,0 +1,12 @@
+Files/folders to delete for cleanup:
+- src/App.test.js
+- src/setupTests.js
+- src/reportWebVitals.js
+- src/ProgressBar.js
+- src/PlowingVisual.js
+- src/SoilTestingAnimation.js
+- src/SoilTestingVisual.js
+- src/TractorAnimation.js
+- public/assets/game/ (empty folder)
+
+You can safely remove these files/folders to reduce space and complexity. If you want me to delete them automatically, please confirm and I will proceed.
